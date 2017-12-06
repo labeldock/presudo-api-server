@@ -1,0 +1,31 @@
+{
+  "name": "presudo-api-server",
+  "version": "1.0.0",
+  "description": "Simple CRUD server",
+  "main": "server/express/api.js",
+  "scripts": {
+    "start": "./node_modules/.bin/nodemon --watch server/express",
+    "clean": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/labeldock/presudo-api-server.git"
+  },
+  "keywords": [
+    "presudo",
+    "api",
+    "server"
+  ],
+  "author": "AHN HO JUNG",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/labeldock/presudo-api-server/issues"
+  },
+  "homepage": "https://github.com/labeldock/presudo-api-server#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "lodash": "^4.17.4",
+    "nodemon": "^1.12.4"
+  }
+}
