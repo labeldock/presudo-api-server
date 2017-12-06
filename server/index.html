@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link href="/app.css" rel="stylesheet" type="text/css">
+        <script src="/vue.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/axios.js" type="text/javascript" charset="utf-8"></script>
+    </head>
+    <body>
+        <div id="app" v-cloak>
+            <ul>
+                <li v-for="item in all">{{item}}</li>
+            </ul>
+        </div>
+        <script>
+            axios.get("/presudo-api-server").then(function(response){
+                var app = new Vue({
+                    el:"#app",
+                    data:{
+                        all:response.data
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

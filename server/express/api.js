@@ -1,1 +1,4 @@
-var app = require("./default");
+// extend api
+var app = require("./bootstrap");
+
+if(app.error) return true;

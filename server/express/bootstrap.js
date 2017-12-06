@@ -12,12 +12,24 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
-  
-//static resources
-app.use("/public",express.static(path.resolve(__dirname,'../public')));  
 
 app.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
+});
+  
+//static resources
+app.use("/",function(req,res,next){
+    if(req.url === "/" || req.url === "/index.html"){
+        res.sendFile(path.join(path.resolve(__dirname,'../index.html')));
+    } else {
+        next();
+    }
+});
+
+app.use("/",express.static(path.resolve(__dirname,'../static')));
+
+app.get("/presudo-api-server",function(req,res){
+    res.status(200).send({foo:"bar"})
 });
 
 app.get("/:models/",function(req,res){
