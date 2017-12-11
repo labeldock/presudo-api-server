@@ -1,4 +1,6 @@
 // extend api
-var app = require("./bootstrap");
+var bootstrap = require("./bootstrap");
 
-if(app.error) return true;
+bootstrap.then(function(){
+    
+});
