@@ -9,8 +9,9 @@ q.reject    = Bluebird.reject;
 q.reduce    = Bluebird.reduce;
 q.race      = Bluebird.race;
 q.promisify = Bluebird.promisify;
-q.sequance =  (function(){
-    
+
+//extra utility
+(function(){
     var asArray = function(data){
         if(data instanceof Array){
             return data;
@@ -23,8 +24,8 @@ q.sequance =  (function(){
         }
         return [data];
     };
-    
-    return function(data,fn,serialPipeOutMode){
+
+    q.sequance = function(data,fn,serialPipeOutMode){
         if(typeof fn === "undefined"){
             fn = function(datum){
                 if(typeof datum === "function"){
@@ -77,6 +78,45 @@ q.sequance =  (function(){
             nextFn(fn);
         }); 
     };
-}())
+
+    q.executor = (function(){
+        var getJobs = function(qfns){
+            return asArray(qfns).filter(function(fn){
+                if(typeof fn === "function") {
+                    return true;
+                } else {
+                    console.log("These types can not be registered. Only functions are allowed.",fn)
+                }
+            });
+        };
+        
+        return function(){
+            var jobs = [];
+            var excutable = false;
+            var working   = false;
+            var methods = {
+                reserve:function(qfns){
+                    getJobs(qfns).forEach(function(fn){
+                        jobs.push(fn);
+                    });
+                },
+                push:function(qfns){
+                    getJobs(qfns).forEach(function(fn){
+                        jobs.push(fn);
+                    });;
+                },
+                start:function(){
+                    
+                },
+                stop:function(){
+                    
+                }
+            }
+            return methods;
+        };
+    }());
+    
+}());
+
 
 module.exports = q;
