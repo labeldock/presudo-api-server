@@ -7,12 +7,12 @@ Simple CRUD server
   - [x] express server
   - [x] nodemon
   - [x] static page
-  - [ ] server bootstrap (with promise pattern)
-  - [ ] json db
-  - [ ] CRUD Object
+  - [x] server bootstrap (with promise pattern)
+  - [x] json db
+  - [ ] CRUD JOB Manager
   - [ ] manager page
   - [ ] authenticate
-  - [ ] soket
+  - [ ] socket
 
 ## require
 node 6.x
