@@ -12,50 +12,56 @@ var ODBCObjectConnection = (function(){
     };
     
     ODBCObjectConnector.prototype = {
+        all:function(){
+            return _.cloneDeep(this.dataSource);
+        },
         table:function(tableName){
             return new ODBCObjectTable(this, tableName);
         }
     };
     
     var ODBCObjectTable = function(driver, tableName){
-        this.driver  = driver;
-        this.name    = tableName;
-        this.$target = this.driver.dataSource[this.name] || [];
+        this.tableName    = tableName;
+        this.handleSource = function(handle){
+            return handle(driver.dataSource[this.tableName]);
+        };
+        this.dataSoruce = function(where){
+            var dataSource = driver.dataSource[this.tableName] || [];
+            return _.cloneDeep(where? _.filter(dataSource,where) : dataSource);
+        };
     };
     
     ODBCObjectTable.prototype = {
         all:function(){
-            return _.cloneDeep(this.$target);
+            return this.dataSoruce();
         },
-        create:function(datum){
-            if(typeof datum === "object"){
-                var maxId = _.get(_.maxBy(this.$target,"id"),"id");
-            
+        where:function(query){
+            return this.dataSoruce(query);
+        },
+        id:function(id){
+            return this.dataSoruce({id:~~id})[0];
+        },
+        insert:function(datum){
+            return typeof datum === "object" ? this.handleSource(function(dataSource){
+                var maxId = _.get(_.maxBy(dataSoruce,"id"),"id");
+        
                 if(typeof maxId === "number"){
                     maxId++;
                 } else {
                     maxId = 1;
                 }
-                
+            
                 datum.id = maxId;
-                this.$target.push(datum);
-            }
-        },
-        where:function(query){
-            return _.cloneDeep(_.find(this.$target,query))
-        },
-        id:function(id){
-            return _.findLast(this.$target,{id:id});
+                dataSoruce.push(datum);
+                
+                return datum;
+            }) : null;
         },
         update:function(datum,id){
             var lastDatum = _.findLast(this.$target, {id:_.get(datum,"id") || id})
             _.assign(lastDatum,datum);
             return _.cloneDeep(lastDatum);
         }
-    };
-    
-    var ODBCDataRow = function(driver, tableName){
-        
     };
     
     return function(object){

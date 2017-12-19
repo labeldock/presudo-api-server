@@ -43,18 +43,26 @@ module.exports = $q.sequance([
         app.use("/",express.static(path.resolve(__dirname,'../static')));
 
         app.get("/presudo-api-server",function(req,res){
-            res.status(200).send({foo:"bar"})
+            var result = db.all();
+            res.status(200).send(result);
         });
-
+        
         app.get("/:models/",function(req,res){
-            res.status(200).send("ok");
+            var result = db.table(req.params.models).all();
+            res.status(200).send(result);
         });
 
         app.get("/:model/:index",function(req,res){
-            res.status(200).send("ok");
+            var result = db.table(req.params.model).id(req.params.index);
+            if(result){
+                res.status(200).send(result);
+            } else {
+                res.status(404).send(null);
+            }
         });
 
         app.post("/:model",function(req,res){
+            
             res.status(200).send("ok");
         });
 
