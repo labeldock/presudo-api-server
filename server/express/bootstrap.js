@@ -1,47 +1,21 @@
 //libs
 var $q       = require('./utils/q');
-var fs       = require('fs');
+var odbc     = require('./utils/odbc');
 var path     = require('path');
 var filePath = function(relativePath){ return path.resolve(__dirname,relativePath); };
 
-//app
-var STATE = {
-    run:false,
-    DB:null
-};
-
 module.exports = $q.sequance([
-    //check db.json
+    //check db.json file
     function(){
-        var readFile   = $q.promisify(fs.readFile);
-        var writeFile  = $q.promisify(fs.writeFile);
-        
-        if(!fs.existsSync(filePath('../db/db.json'))){
-            return readFile(filePath('../db/default.json'), 'utf8').then(function(data){
-                return writeFile(filePath("../db/db.json"), data).then(function(){
-                    STATE.DB = data;
-                    console.log("CREATED db.json");
-                }); 
-            });
-        } else {
-            return readFile(filePath('../db/db.json'), 'utf8').then(function(raw){
-                try {
-                    STATE.DB = JSON.parse(raw);
-                } catch(e) {
-                    $q.reject(new Error("db.json is borken"));
-                }
-            });
-        }
+        return odbc
+        .read(filePath('../db/db.json'))
+        .catch(function(error){
+            return odbc.create(filePath('../db/db.json'), filePath('../db/default.json'));
+        });
     },
-    function(){
-        console.log("DB",STATE.DB);
-    },
-    function(){
-        console.log("SERVER BOOT");
-        
+    function(db){
         var express    = require('express');
         var bodyParser = require('body-parser');
-        var _          = require('lodash');
 
         //express init
         var app = express();

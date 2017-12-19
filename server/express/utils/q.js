@@ -2,16 +2,34 @@
 var Bluebird = require("bluebird");
 var q = function(fn){ return new Bluebird(fn); };
 
-q.defer     = Bluebird;
+
 q.all       = Bluebird.all;
 q.resolve   = Bluebird.resolve;
 q.reject    = Bluebird.reject;
-q.reduce    = Bluebird.reduce;
-q.race      = Bluebird.race;
+q.defer     = function(){
+    var resolve, reject;
+    var promise = new Bluebird(function() {
+        resolve = arguments[0];
+        reject = arguments[1];
+    });
+    return {
+        resolve: resolve,
+        reject: reject,
+        promise: promise
+    };
+};
 q.promisify = Bluebird.promisify;
+q.timeout   = Bluebird.timeout;
+q.valueOf = function(maybeQ){
+    return q(function(resolve,reject){
+        typeof maybeQ === "object" && maybeQ !== null && maybeQ.then ?
+        maybeQ.then(resolve).catch(reject) :
+        resolve(maybeQ) ;
+    });
+};
 
 //extra utility
-(function(){
+(function(q){
     var asArray = function(data){
         if(data instanceof Array){
             return data;
@@ -57,20 +75,17 @@ q.promisify = Bluebird.promisify;
                         fnResult = fn(data[index++],index-1);
                     }
                     
-                    if(typeof fnResult === "object" && fnResult !== null && fnResult.then){
-                        fnResult.then(function(r){
-                            resolveResult.push(r);
-                            return nextFn(r),r;
-                        }).catch(function(reason){
-                            if(!serialPipeOutMode && (reason instanceof Error)){
-                                reason.success = data.slice(index-1);
-                            }
-                            return reject(reason);
-                        });
-                    } else {
-                        resolveResult.push(fnResult);
-                        nextFn(fnResult);
-                    }
+                    q.valueOf(fnResult)
+                    .then(function(r){
+                        resolveResult.push(r), nextFn(r);
+                    })
+                    .catch(function(reason){
+                        if(!serialPipeOutMode && (reason instanceof Error)){
+                            reason.success = data.slice(index-1);
+                        }
+                        reject(reason);
+                    });
+                    
                 } else {
                     return resolve(serialPipeOutMode ? beforeResolved : resolveResult);
                 }
@@ -79,10 +94,20 @@ q.promisify = Bluebird.promisify;
         }); 
     };
 
-    q.executor = (function(){
+    q.serialExecutor = (function(){
+        
+        var PromisedSerialExecutor = function(){
+            this.$jobs      = [];
+            this.$excutable = true;
+        };
+        
+        var getJob = function(qfn){
+            return typeof qfn === "function" ? qfn : undefined;
+        };
+        
         var getJobs = function(qfns){
             return asArray(qfns).filter(function(fn){
-                if(typeof fn === "function") {
+                if(getJob(fn)) {
                     return true;
                 } else {
                     console.log("These types can not be registered. Only functions are allowed.",fn)
@@ -90,33 +115,57 @@ q.promisify = Bluebird.promisify;
             });
         };
         
-        return function(){
-            var jobs = [];
-            var excutable = false;
-            var working   = false;
-            var methods = {
-                reserve:function(qfns){
-                    getJobs(qfns).forEach(function(fn){
-                        jobs.push(fn);
-                    });
-                },
-                push:function(qfns){
-                    getJobs(qfns).forEach(function(fn){
-                        jobs.push(fn);
-                    });;
-                },
-                start:function(){
-                    
-                },
-                stop:function(){
-                    
-                }
+        var executeThis = function(pse){
+            if(pse.$excutable === true && pse.$jobs.length){
+                pse.$excutable = false;
+                
+                var job = pse.$jobs.shift();
+                
+                q.valueOf(job.qFn)
+                .then(function(r){
+                    job.defer.resolve(r);
+                    pse.$excutable = true;
+                    executeThis(pse);
+                })
+                .catch(function(r){
+                    job.defer.reject(r);
+                    pse.$excutable = true;
+                });
             }
-            return methods;
+        };
+        
+        PromisedSerialExecutor.prototype = {
+            reserve:function(qfn,timeout){
+                qfn = getJob(qfn);
+                if(qfn){
+                    var defer = q.defer();
+                    
+                    this.$jobs.push({
+                        qFn:fn,
+                        defer:defer,
+                        timeout:timeout || 0
+                    });
+                    
+                    return defer.promise;
+                } else {
+                    throw new Error("PromisedSerialExecutor allow only Function");
+                }
+            },
+            push:function(qfn,timeout){
+                var promise = this.reserve(qfn,timeout);
+                return promise ? (start(),promise) : promise;
+            },
+            start:function(){
+                if(jobs.length){ executeThis(this); }
+            }
+        };
+        
+        return function(){
+            return new PromisedSerialExecutor();
         };
     }());
     
-}());
+}(q));
 
 
 module.exports = q;
