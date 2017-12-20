@@ -1,3 +1,10 @@
 [v-cloak] {
   display: none;
 }
+#gnb {
+    margin:0;
+    padding:0;
+}
+#gnb > li {
+    display:inline-block;
+}

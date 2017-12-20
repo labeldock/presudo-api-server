@@ -4,17 +4,159 @@
         <link href="/app.css" rel="stylesheet" type="text/css">
         <script src="/vue.js" type="text/javascript" charset="utf-8"></script>
         <script src="/axios.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/vue-router.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/vue-trainman.js" type="text/javascript" charset="utf-8"></script>
     </head>
     <body>
         <div id="app" v-cloak>
-            <ul>
-                <li v-for="(item, key) in all">{{key}} : {{item}}</li>
+            <ul id="gnb">
+                <li>
+                    <a v-router-link to="/">Home</a>
+                </li>
+                <li v-for="(item, key) in all" :key="key">
+                    <a v-router-link :to="'/' + key">{{key}} ({{item.length}})</a>&nbsp;
+                </li>
             </ul>
+            <router-view :key="$route.params.main + $route.params.id"></router-view>
         </div>
+        
+        <template id="home-page">
+            <main>
+                <h2>HOME</h2>
+                <p>Welcome to presudo api server manage tool</p>
+            </main>
+        </template>
+        
+        <template id="table-list-page">
+            <main v-cloak>
+                <h2>{{$route.params.main}}</h2>
+                <table style="width:500px;">
+                    <tbody v-if="!data.length">
+                        <tr>
+                            <td>Empty.</td>
+                        </tr>
+                    </tbody>
+                    <tbody v-if="data.length">
+                        <tr v-for="item in data">
+                            <th>id</th>
+                            <td>{{item.id}}</td>
+                            <th>name</th>
+                            <td>{{item.name}}</td>
+                            <td>
+                                <router-link :to="$route.params.main + '/' + item.id">
+                                    <button>Show</button>
+                                </router-link>
+                                <button>Del</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </template>
+        
+        <template id="table-item-page">
+            <main>
+                <h2>Table item modify</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>id</th>
+                            <td>
+                                <input v-if="$action == 'modify'" v-model="data.id" readOnly>
+                                <span v-else>
+                                    {{data.id}}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>name</th>
+                            <td>
+                                <input v-if="$action == 'modify'" v-model="data.name">
+                                <span v-else>
+                                    {{data.name}}
+                                </span>
+                                
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <footer>
+                    <button @click="$stash('data');$router.push($route.fullPath + '/$modify')" v-if="$action != 'modify'">Modify</button>
+                    <button @click="$router.back();">Back</button>
+                </footer>
+            </main>
+        </template>
+        
         <script>
+           
+            var TableListPage = Vue.extend({
+                template: '#table-list-page',
+                methods:{
+                    load:function(vm){
+                        vm = vm || this;
+                        
+                        axios.get("/"+this.$route.params.main).then(function(response){
+                            vm.data = response.data || [];
+                        });
+                    
+                        return vm;
+                    }
+                },
+                data:function(){
+                    return this.load({
+                        data:[]
+                    });
+                }
+            });
+            
+            var TableItemPage = Vue.extend({
+                template:"#table-item-page",
+                methods:{
+                    load:function(vm){
+                        vm = vm || this;
+                        
+                        axios.get("/"+this.$route.params.main+"/"+this.$route.params.id).then(function(response){
+                            vm.data = response.data || {};
+                        });
+                        
+                        return vm;
+                    }
+                },
+                data:function(){
+                    return this.load({
+                        data:{}
+                    });
+                }
+            });
+            
+            var router = new VueRouter({
+                routes:[
+                    {path: '/', component: { template: '#home-page' }},
+                    {
+                        path: '/:main',
+                        component:TableListPage,
+                    },
+                    {
+                        path: '/:main/:id',
+                        component:TableItemPage,
+                        children:[
+                            {
+                                path:"$:action",
+                                component:TableItemPage
+                            }
+                        ]
+                    }
+                ]
+            });
+            
+            Vue.use(VueTrainman);
+            
+            var app;
+            
             axios.get("/presudo-api-server").then(function(response){
-                var app = new Vue({
+                app = new Vue({
                     el:"#app",
+                    router:router,
                     data:{
                         all:response.data
                     }
