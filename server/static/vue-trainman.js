@@ -30,13 +30,15 @@
         });
         
         var AutoPopCache = (function(){
+            
             var AutoPopCache = function(){};
+            
             AutoPopCache.prototype = {
                 
             };
             
-            return new AutoPopCache();
-        }{});
+            return (new AutoPopCache());
+        }());
         
         
         function touchTrack(vueInstance,key){
@@ -58,7 +60,6 @@
             
             if(this.$route && autoPop === true){
                 AutoPopCache[ this.$route.fullPath ] = {
-                    this._uid+key
                     
                 }
             }
