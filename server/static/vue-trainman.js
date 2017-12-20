@@ -12,6 +12,9 @@
     };
     
     VueTrainman.install = function(Vue, options){
+        
+        var VueMixin = {};
+        
         //router action helper
         Object.defineProperty(Vue.prototype, '$action', {
             get: function(){ 
@@ -19,27 +22,31 @@
             }
         });
         
-        Vue.mixin({
-            created: function(){
-                this.$track = {};
-            },
-            beforeRouteUpdate:function(to,from,next){
-                console.log("to",to);
-                next();
-            }
-        });
+        VueMixin.beforeRouteUpdate = function(to,from,next){
+            console.log("to",to);
+            next();
+        };
         
         var AutoPopCache = (function(){
-            
             var AutoPopCache = function(){};
             
             AutoPopCache.prototype = {
-                
+                $append:function(){
+                    
+                },
+                $delete:function(){
+                    
+                }
             };
             
             return (new AutoPopCache());
         }());
         
+        // $track
+        
+        VueMixin.created = function(){
+            this.$track = {};
+        };
         
         function touchTrack(vueInstance,key){
             if(!vueInstance.$track){
@@ -102,6 +109,8 @@
                 });
             }
         });
+        
+        Vue.mixin(VueMixin);
     };
     
     return VueTrainman;
