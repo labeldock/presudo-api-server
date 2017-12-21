@@ -59,4 +59,4 @@ typings/
 
 *.swp
 package-lock.json
-dbdata.json
+db.json

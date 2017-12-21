@@ -10,7 +10,7 @@ module.exports = $q.sequance([
         return odbc
         .read(filePath('../db/db.json'))
         .catch(function(error){
-            return odbc.create(filePath('../db/db.json'), filePath('../db/default.json'));
+            return odbc.createFrom(filePath('../db/db.json'), filePath('../db/default.json'));
         });
     },
     function(db){
@@ -62,8 +62,10 @@ module.exports = $q.sequance([
         });
 
         app.post("/:model",function(req,res){
-            
-            res.status(200).send("ok");
+            var result = db.table(req.params.model).insert(req.body);
+            db.writeDataSource().then(function(){
+                res.status(200).send(result);
+            });
         });
 
         app.put("/:model/:index",function(req,res){

@@ -7,8 +7,11 @@ var readFile   = $q.promisify(fs.readFile);
 var writeFile  = $q.promisify(fs.writeFile);
 
 var ODBCObjectConnection = (function(){
-    var ODBCObjectConnector = function(object){
-        this.dataSource = object;
+    var ODBCObjectConnector = function(object, writeFn){
+        this.dataSource      = object;
+        this.writeDataSource = function(){
+            return writeFn(this.dataSource);
+        }.bind(this);
     };
     
     ODBCObjectConnector.prototype = {
@@ -43,7 +46,7 @@ var ODBCObjectConnection = (function(){
         },
         insert:function(datum){
             return typeof datum === "object" ? this.handleSource(function(dataSource){
-                var maxId = _.get(_.maxBy(dataSoruce,"id"),"id");
+                var maxId = _.get(_.maxBy(dataSource,"id"),"id");
         
                 if(typeof maxId === "number"){
                     maxId++;
@@ -52,7 +55,7 @@ var ODBCObjectConnection = (function(){
                 }
             
                 datum.id = maxId;
-                dataSoruce.push(datum);
+                dataSource.push(datum);
                 
                 return datum;
             }) : null;
@@ -64,53 +67,64 @@ var ODBCObjectConnection = (function(){
         }
     };
     
-    return function(object){
-        return new ODBCObjectConnector(object);
+    return function(object,writeFn){
+        return new ODBCObjectConnector(object,writeFn);
     }
 }());
 
-var ODBC = {
-    open:function(raw){
-        var object;
-        
-        if(typeof raw === "object"){
-            object = raw;
-        } else {
-            try {
-                object = JSON.parse(raw);
-            } catch(e) {
-                $q.reject(new Error("odbc data source is borken"));
-            }
+var ODBC = (function(){
+    var ODBCWriterFactory = function(path){
+        return function(data){
+            return writeFile(path, JSON.stringify(data))
+            .then(function(){ return data; });
         }
+    }
+    
+    return {
+        open:function(raw,option){
+            var object;
+        
+            if(typeof raw === "object"){
+                object = raw;
+            } else {
+                try {
+                    object = JSON.parse(raw);
+                } catch(e) {
+                    $q.reject(new Error("odbc data source is borken"));
+                }
+            }
 
-        return ODBCObjectConnection(object);
-    },
-    read:function(path){
-        return readFile(path, 'utf8').then(function(raw){
-            return ODBC.open(raw);
-        });
-    },
-    create:function(path, data){
-        switch(typeof data){
+            return ODBCObjectConnection(object,option);
+        },
+        read:function(path){
+            return readFile(path, 'utf8').then(function(raw){
+                return ODBC.open(raw,ODBCWriterFactory(path));
+            });
+        },
+        createFrom:function(path, data){
+            switch(typeof data){
             case "object":
             case "undefined":
                 data = (data || {});
                 return writeFile(path, data).then(function(){
-                    return ODBC.open(data);
+                    return ODBC.open(data,ODBCWriterFactory(path));
                 });
                 break;
             case "string":
                 return readFile(data, 'utf8').then(function(data){
                     return writeFile(path, data).then(function(){
-                        return ODBC.open(data)
+                        return ODBC.open(data,ODBCWriterFactory(path))
                     });
                 });
                 break;
             default:
                 return $q.reject(new Error("Unknown db create data type"));
                 break;
+            }
         }
-    }
-};
+    };
+}());
+
+
 
 module.exports = ODBC;

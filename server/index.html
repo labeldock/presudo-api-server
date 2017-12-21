@@ -89,7 +89,7 @@
                     <button v-if="!$act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
                     <button v-if="$act == 'modify'" @click="$freez('data');$router.back();">Save</button>
                     <button v-if="$act == 'create'" @click="create();">Save</button>
-                    <button @click="$router.back();">Back</button>
+                    <button v-if="$act" @click="$router.back();">Back</button>
                 </footer>
             </main>
         </template>
@@ -135,11 +135,13 @@
                         return vm;
                     },
                     create:function(){
+                        var vm = this;
+                        
                         axios.post("/"+this.$route.params.main,{name:this.data.name})
                         .then(function(response){
-                            console.log("response",response);
+                            console.log("response",response)
+                            vm.$router.replace("/"+vm.$route.params.main);
                         });
-                        
                     }
                 },
                 data:function(){
