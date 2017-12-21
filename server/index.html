@@ -30,7 +30,7 @@
         <template id="table-list-page">
             <main v-cloak>
                 <header>
-                    <h2>{{$route.params.main}}</h2>
+                    <h2>{{$route.params.main | capitalize}}</h2>
                     <button v-router-link :to="$route.params.main + '/' + 'create'">new</button>
                     <hr>
                 </header>
@@ -60,7 +60,7 @@
         <template id="table-item-page">
             <main>
                 <header>
-                    <h2>Table item modify</h2>
+                    <h2>{{pageTitle}}</h2>
                 </header>
                 <table>
                     <tbody>
@@ -95,6 +95,16 @@
         </template>
         
         <script>
+            
+            var filter = {
+                "capitalize":function(value){
+                    if (!value) return '';
+                    value = String(value);
+                    return value.charAt(0).toUpperCase() + value.slice(1);
+                }
+            }
+           
+            Vue.filter("capitalize",filter.capitalize);
            
             var TableListPage = Vue.extend({
                 template: '#table-list-page',
@@ -127,12 +137,17 @@
             
             var TableItemPage = Vue.extend({
                 template:"#table-item-page",
+                computed:{
+                    pageTitle:function(){
+                        return filter.capitalize(this.$act) + " " + (this.$act ? this.$route.params.main : filter.capitalize(this.$route.params.main)) + " table item " + (this.data.id ? this.data.id : '');
+                    }  
+                },
                 methods:{
                     load:function(vm){
                         vm = vm || this;
                         
                         if(this.$act === "create"){
-                            console.log("cra")
+                            
                         } else {
                             axios.get("/"+this.$route.params.main+"/"+this.$route.params.id).then(function(response){
                                 vm.data = response.data || {};
@@ -186,6 +201,7 @@
                     }
                 ]
             });
+            
             
             Vue.use(VueTrainman);
             
