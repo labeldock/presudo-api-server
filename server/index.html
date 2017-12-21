@@ -13,11 +13,15 @@
                 <li>
                     <a v-router-link to="/">Home</a>
                 </li>
-                <li v-for="(item, key) in all" :key="key">
+                <li v-for="(item, key) in menudata" :key="key">
                     <a v-router-link :to="'/' + key">{{key}} ({{item.length}})</a>&nbsp;
                 </li>
             </ul>
-            <router-view :key="$route.params.main + $route.params.id"></router-view>
+            <router-view 
+                :key="$route.params.main + $route.params.id" 
+                :maindata="menudata" 
+                @updated="load();">
+            </router-view>
         </div>
         
         <template id="home-page">
@@ -30,8 +34,7 @@
         <template id="table-list-page">
             <main v-cloak>
                 <header>
-                    <h2>{{$route.params.main | capitalize}}</h2>
-                    <button v-router-link :to="$route.params.main + '/' + 'create'">new</button>
+                    <h2>{{$route.params.main | capitalize}} <button v-router-link :to="$route.params.main + '/' + 'create'">new</button></h2>
                     <hr>
                 </header>
                 
@@ -95,6 +98,7 @@
         </template>
         
         <script>
+            Vue.use(VueTrainman);
             
             var filter = {
                 "capitalize":function(value){
@@ -108,30 +112,25 @@
            
             var TableListPage = Vue.extend({
                 template: '#table-list-page',
+                props:["maindata"],
+                computed:{
+                    data:function(){
+                        return this.maindata[this.$route.params.main] || [];
+                    }
+                },
                 methods:{
-                    load:function(vm){
-                        vm = vm || this;
-                        
-                        axios.get("/"+this.$route.params.main).then(function(response){
-                            vm.data = response.data || [];
-                        });
-                    
-                        return vm;
-                    },
                     remove:function(item){
                         var vm = this;
                         
                         if(confirm("Are you sure?")){
                             axios.delete("/"+this.$route.params.main+"/"+item.id).then(function(){
-                                vm.load();
+                                vm.$emit("updated");
                             });
                         }
                     }
                 },
                 data:function(){
-                    return this.load({
-                        data:[]
-                    });
+                    return {};
                 }
             });
             
@@ -160,8 +159,8 @@
                         var vm = this;
                         
                         axios.post("/"+this.$route.params.main,{name:this.data.name}).then(function(response){
-                            console.log("response",response)
                             vm.$router.replace("/"+vm.$route.params.main);
+                            vm.$emit("updated");
                         });
                     }
                 },
@@ -202,20 +201,28 @@
                 ]
             });
             
-            
-            Vue.use(VueTrainman);
-            
-            var app;
-            
-            axios.get("/presudo-api-server").then(function(response){
-                app = new Vue({
-                    el:"#app",
-                    router:router,
-                    data:{
-                        all:response.data
+            var app = new Vue({
+                el:"#app",
+                router:router,
+                methods:{
+                    load:function(vm){
+                        vm = vm || this;
+                        
+                        axios.get("/presudo-api-server").then(function(response){
+                            vm.menudata = response.data;
+                        });
+                        
+                        return vm;
                     }
-                });
+                },
+                data:function(){
+                    return this.load({
+                        menudata:{}
+                    });
+                }
             });
+            
+            
         </script>
     </body>
 </html>
