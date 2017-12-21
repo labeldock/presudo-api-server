@@ -9,10 +9,16 @@ var writeFile  = $q.promisify(fs.writeFile);
 var ODBCObjectConnection = (function(){
     var ODBCObjectConnector = function(object, writeFn){
         this.dataSource      = object;
-        this.writeDataSource = function(){
+        this.writeDataSource = function(beforeFn){
+            var result;
+            
+            if(typeof beforeFn === "function"){
+                result = beforeFn();
+            }
+            
             return writeFn(this.dataSource).then(function(resp){
                 console.log(`[${Date.now()}] Success write ODBC dataSource`);
-                return resp;
+                return result;
             });
         }.bind(this);
     };

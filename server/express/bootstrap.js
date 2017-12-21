@@ -62,15 +62,15 @@ module.exports = $q.sequance([
         });
 
         app.post("/:model",function(req,res){
-            var result = db.table(req.params.model).insert(req.body);
-            db.writeDataSource().then(function(){
+            db.writeDataSource(function(){
+                return db.table(req.params.model).insert(req.body);
+            }).then(function(result){
                 res.status(200).send(result);
             });
         });
 
         app.put("/:model/:id",function(req,res){
             res.status(200).send("ok");
-    
         });
 
         app.patch("/:model/:id",function(req,res){
@@ -79,11 +79,11 @@ module.exports = $q.sequance([
         });
 
         app.delete("/:model/:id",function(req,res){
-            var result = db.table(req.params.model).deleteBy(function(data){
-                return data.id == req.params.id;
-            });
-            
-            db.writeDataSource().then(function(){
+            db.writeDataSource(function(){
+                return db.table(req.params.model).deleteBy(function(data){
+                    return data.id == req.params.id;
+                });
+            }).then(function(result){
                 res.status(200).send(result);
             });
         });
