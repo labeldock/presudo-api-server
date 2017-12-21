@@ -28,13 +28,48 @@
             <main>
                 <h2>HOME</h2>
                 <p>Welcome to presudo api server manage tool</p>
+                
+                <button @click="formOpend = $train.toggle([true,false],formOpend) && resetForm()">
+                    <span v-if="!formOpend"> Insert category data </span>
+                    <span v-else> Close </span>
+                </button>
+                
+                <div v-if="formOpend">
+                    <hr>
+                    <h2>Create category item</h2>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>Category</th>
+                                <td>
+                                    <input type="text" v-model="form.category">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>name</th>
+                                <td>
+                                    <input type="text" v-model="form.name">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>value</th>
+                                <td>
+                                    <input type="text" v-model="form.value">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <footer>
+                        <button @click="create">Save</button>
+                    </footer>
+                </div>
             </main>
         </template>
         
         <template id="table-list-page">
             <main v-cloak>
                 <header>
-                    <h2>{{$route.params.main | capitalize}} <button v-router-link :to="$route.params.main + '/' + 'create'">new</button></h2>
+                    <h2>{{$route.params.main | capitalize}} <button v-router-link :to="$route.params.main + '/' + 'create'">add</button></h2>
                     <hr>
                 </header>
                 
@@ -121,6 +156,25 @@
            
             Vue.filter("capitalize",filter.capitalize);
            
+            var HomePage = Vue.extend({
+                template:"#home-page",
+                methods:{
+                    create:function(){
+                        
+                    },
+                    resetForm:function(){
+                        this.form = {};
+                        return true;
+                    }
+                },
+                data:function(){
+                    return {
+                        formOpend:false,
+                        form:{}
+                    }
+                }
+            });
+           
             var TableListPage = Vue.extend({
                 template: '#table-list-page',
                 props:["maindata"],
@@ -193,7 +247,10 @@
             
             var router = new VueRouter({
                 routes:[
-                    {path: '/', component: { template: '#home-page' }},
+                    {
+                        path: '/', 
+                        component: HomePage
+                    },
                     {
                         path: '/:main',
                         component:TableListPage,
