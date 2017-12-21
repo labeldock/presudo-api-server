@@ -49,7 +49,7 @@
                             <td>{{item.name}}</td>
                             <td>
                                 <button v-router-link :to="$route.params.main + '/' + item.id" >Show</button>
-                                <button>Del</button>
+                                <button @click="remove(item)">Del</button>
                             </td>
                         </tr>
                     </tbody>
@@ -102,12 +102,20 @@
                     load:function(vm){
                         vm = vm || this;
                         
-                        axios.get("/"+this.$route.params.main)
-                        .then(function(response){
+                        axios.get("/"+this.$route.params.main).then(function(response){
                             vm.data = response.data || [];
                         });
                     
                         return vm;
+                    },
+                    remove:function(item){
+                        var vm = this;
+                        
+                        if(confirm("Are you sure?")){
+                            axios.delete("/"+this.$route.params.main+"/"+item.id).then(function(){
+                                vm.load();
+                            });
+                        }
                     }
                 },
                 data:function(){
@@ -126,8 +134,7 @@
                         if(this.$act === "create"){
                             console.log("cra")
                         } else {
-                            axios.get("/"+this.$route.params.main+"/"+this.$route.params.id)
-                            .then(function(response){
+                            axios.get("/"+this.$route.params.main+"/"+this.$route.params.id).then(function(response){
                                 vm.data = response.data || {};
                             });
                         }
@@ -137,8 +144,7 @@
                     create:function(){
                         var vm = this;
                         
-                        axios.post("/"+this.$route.params.main,{name:this.data.name})
-                        .then(function(response){
+                        axios.post("/"+this.$route.params.main,{name:this.data.name}).then(function(response){
                             console.log("response",response)
                             vm.$router.replace("/"+vm.$route.params.main);
                         });

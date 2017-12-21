@@ -10,7 +10,10 @@ var ODBCObjectConnection = (function(){
     var ODBCObjectConnector = function(object, writeFn){
         this.dataSource      = object;
         this.writeDataSource = function(){
-            return writeFn(this.dataSource);
+            return writeFn(this.dataSource).then(function(resp){
+                console.log(`[${Date.now()}] Success write ODBC dataSource`);
+                return resp;
+            });
         }.bind(this);
     };
     
@@ -59,6 +62,12 @@ var ODBCObjectConnection = (function(){
                 
                 return datum;
             }) : null;
+        },
+        deleteBy:function(yieldFn){
+            this.handleSource(function(dataSource){
+                var saveData = _.filter(dataSource, function(d,i){ return !yieldFn(d,i); });
+                Array.prototype.splice.apply(dataSource,[0,dataSource.length].concat(saveData));
+            });
         },
         update:function(datum,id){
             var lastDatum = _.findLast(this.$target, {id:_.get(datum,"id") || id})

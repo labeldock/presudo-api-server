@@ -52,8 +52,8 @@ module.exports = $q.sequance([
             res.status(200).send(result);
         });
 
-        app.get("/:model/:index",function(req,res){
-            var result = db.table(req.params.model).id(req.params.index);
+        app.get("/:model/:id",function(req,res){
+            var result = db.table(req.params.model).id(req.params.id);
             if(result){
                 res.status(200).send(result);
             } else {
@@ -68,18 +68,24 @@ module.exports = $q.sequance([
             });
         });
 
-        app.put("/:model/:index",function(req,res){
+        app.put("/:model/:id",function(req,res){
             res.status(200).send("ok");
     
         });
 
-        app.patch("/:model/:index",function(req,res){
+        app.patch("/:model/:id",function(req,res){
             res.status(200).send("ok");
     
         });
 
-        app.delete("/:model/:index",function(req,res){
-            res.status(200).send("ok");
+        app.delete("/:model/:id",function(req,res){
+            var result = db.table(req.params.model).deleteBy(function(data){
+                return data.id == req.params.id;
+            });
+            
+            db.writeDataSource().then(function(){
+                res.status(200).send(result);
+            });
         });
     }
 ]);
