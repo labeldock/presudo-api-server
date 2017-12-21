@@ -50,6 +50,8 @@
                             <td>{{item.id}}</td>
                             <th>name</th>
                             <td>{{item.name}}</td>
+                            <th>name</th>
+                            <td>{{item.value}}</td>
                             <td>
                                 <button v-router-link :to="$route.params.main + '/' + item.id" >Show</button>
                                 <button @click="remove(item)">Del</button>
@@ -67,11 +69,10 @@
                 </header>
                 <table>
                     <tbody>
-                        <tr>
+                        <tr v-if="!String($act).match(/modify|create/)">
                             <th>id</th>
                             <td>
-                                <input v-if="String($act).match(/modify|create/)" v-model="data.id" readOnly>
-                                <span v-else>
+                                <span>
                                     {{data.id}}
                                 </span>
                             </td>
@@ -82,6 +83,16 @@
                                 <input v-if="String($act).match(/modify|create/)" v-model="data.name">
                                 <span v-else>
                                     {{data.name}}
+                                </span>
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>value</th>
+                            <td>
+                                <input v-if="String($act).match(/modify|create/)" v-model="data.name">
+                                <span v-else>
+                                    {{data.value}}
                                 </span>
                                 
                             </td>
