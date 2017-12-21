@@ -75,10 +75,12 @@ var ODBCObjectConnection = (function(){
                 Array.prototype.splice.apply(dataSource,[0,dataSource.length].concat(saveData));
             });
         },
-        update:function(datum,id){
-            var lastDatum = _.findLast(this.$target, {id:_.get(datum,"id") || id})
-            _.assign(lastDatum,datum);
-            return _.cloneDeep(lastDatum);
+        updateBy:function(filterFn,yieldFn){
+            this.handleSource(function(dataSource){
+                _.filter(dataSource, filterFn).forEach(function(datum){
+                    yieldFn(datum);
+                });
+            });
         }
     };
     

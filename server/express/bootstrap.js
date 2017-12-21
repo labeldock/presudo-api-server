@@ -70,12 +70,41 @@ module.exports = $q.sequance([
         });
 
         app.put("/:model/:id",function(req,res){
-            res.status(200).send("ok");
+            db.writeDataSource(function(){
+                return db.table(req.params.model).updateBy(function(search){ 
+                    return search.id == req.params.id;
+                },function(datum){
+                    
+                    Object.keys(datum).forEach(function(key){
+                        delete datum[key];
+                    });
+                    
+                    var updateDatum = Object.assign({},req.body);
+                    
+                    if(!updateDatum.id){
+                        updateDatum.id = ~~req.params.id;
+                    }
+                    
+                    Object.assign(datum, updateDatum);
+                });
+            }).then(function(result){
+                res.status(200).send(result);
+            });
         });
 
         app.patch("/:model/:id",function(req,res){
-            res.status(200).send("ok");
-    
+            db.writeDataSource(function(){
+                return db.table(req.params.model).updateBy(function(search){ 
+                    return search.id == req.params.id;
+                },function(datum){
+                    Object.assign(datum,req.body);
+                    if(!datum.id){
+                        datum.id = ~~req.params.id;
+                    }
+                });
+            }).then(function(result){
+                res.status(200).send(result);
+            });
         });
 
         app.delete("/:model/:id",function(req,res){

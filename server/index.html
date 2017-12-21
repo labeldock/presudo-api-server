@@ -90,7 +90,7 @@
                 </table>
                 <footer>
                     <button v-if="!$act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
-                    <button v-if="$act == 'modify'" @click="$freez('data');$router.back();">Save</button>
+                    <button v-if="$act == 'modify'" @click="modify()">Save</button>
                     <button v-if="$act == 'create'" @click="create();">Save</button>
                     <button @click="$router.back();">Back</button>
                 </footer>
@@ -162,6 +162,15 @@
                             vm.$router.replace("/"+vm.$route.params.main);
                             vm.$emit("updated");
                         });
+                    },
+                    modify:function(){
+                        var vm = this;
+                        
+                        axios.patch("/"+this.$route.params.main+"/"+this.$route.params.id,{name:this.data.name}).then(function(response){
+                            vm.$freez("data");
+                            vm.$router.replace("/"+vm.$route.params.main);
+                            vm.$emit("updated");
+                        });
                     }
                 },
                 data:function(){
@@ -221,8 +230,6 @@
                     });
                 }
             });
-            
-            
         </script>
     </body>
 </html>
