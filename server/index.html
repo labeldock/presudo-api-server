@@ -81,7 +81,7 @@
                     </tbody>
                 </table>
                 <footer>
-                    <button @click="$stash('data');$router.push($route.fullPath + '/$modify')" v-if="$action != 'modify'">Modify</button>
+                    <button @click="$stash('data',true);$router.push($route.fullPath + '/$modify')" v-if="$action != 'modify'">Modify</button>
                     <button @click="$router.back();">Back</button>
                 </footer>
             </main>

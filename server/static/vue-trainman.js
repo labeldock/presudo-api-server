@@ -22,30 +22,48 @@
             }
         });
         
-        VueMixin.beforeRouteUpdate = function(to,from,next){
-            console.log("to",to);
-            next();
-        };
-        
         var AutoPopCache = (function(){
-            var AutoPopCache = function(){};
+            var AutoPopCache = function(){
+                this.$cache = [];
+            };
             
             AutoPopCache.prototype = {
-                $append:function(){
-                    
-                },
-                $delete:function(){
-                    
+                $append:function(meta){
+                    typeof meta === "object" && this.$cache.push(meta);
                 }
             };
             
             return (new AutoPopCache());
         }());
         
+        VueMixin.beforeRouteUpdate = function(to,from,next){
+            AutoPopCache.$cache = AutoPopCache.$cache.filter(function(meta){
+                if(meta.fullPath === to.fullPath){
+                    meta.pop();
+                    return false;
+                }
+                return true;
+            });
+            next();
+        };
+        
         // $track
         
         VueMixin.created = function(){
             this.$track = {};
+        };
+        
+        function cloneShallow(obj){
+            return Object.assign({},obj);
+        }
+        
+        function cloneDeep(obj){
+            try {
+                return JSON.parse(JSON.stringify(obj));
+            } catch(e) {
+                console.error("Problemalling",obj);
+                throw e;
+            }
         };
         
         function touchTrack(vueInstance,key){
@@ -61,22 +79,24 @@
         Vue.prototype.$stash = function(key,autoPop){
             if(!key) return console.warn("require string type track key",key);
             var trackDock = touchTrack(this,key);
+            
             if(trackDock){
-                trackDock.push(JSON.parse(JSON.stringify(this[key])));
+                trackDock.push(cloneDeep(this[key]));
             }
             
             if(this.$route && autoPop === true){
-                AutoPopCache[ this.$route.fullPath ] = {
-                    
-                }
+                AutoPopCache.$append({
+                    fullPath:this.$route.fullPath,
+                    pop:function(){ this.$pop(key); }.bind(this)
+                });
             }
         };
         
-        Vue.prototype.$freez = function(key,autoBack){
+        Vue.prototype.$freez = function(key){
             if(!key) return console.warn("require string type track key",key);
             var trackDock = touchTrack(this,key);
             if(trackDock){
-                this.$pop(key,false);
+                Array.prototype.splice.call(trackDock,0,trackDock.length);
             }
         };
         
