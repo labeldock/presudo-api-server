@@ -31,7 +31,8 @@
             <main v-cloak>
                 <header>
                     <h2>{{$route.params.main}}</h2>
-                    
+                    <button v-router-link :to="$route.params.main + '/' + 'create'">new</button>
+                    <hr>
                 </header>
                 
                 <table style="width:500px;">
@@ -61,13 +62,12 @@
                 <header>
                     <h2>Table item modify</h2>
                 </header>
-                
                 <table>
                     <tbody>
                         <tr>
                             <th>id</th>
                             <td>
-                                <input v-if="$action == 'modify'" v-model="data.id" readOnly>
+                                <input v-if="String($act).match(/modify|create/)" v-model="data.id" readOnly>
                                 <span v-else>
                                     {{data.id}}
                                 </span>
@@ -76,7 +76,7 @@
                         <tr>
                             <th>name</th>
                             <td>
-                                <input v-if="$action == 'modify'" v-model="data.name">
+                                <input v-if="String($act).match(/modify|create/)" v-model="data.name">
                                 <span v-else>
                                     {{data.name}}
                                 </span>
@@ -86,8 +86,9 @@
                     </tbody>
                 </table>
                 <footer>
-                    <button v-if="$action != 'modify'" @click="$stash('data',true);$router.push($route.fullPath + '/$modify')">Modify</button>
-                    <button v-if="$action == 'modify'" @click="$freez('data');$router.back();">Save</button>
+                    <button v-if="!$act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
+                    <button v-if="$act == 'modify'" @click="$freez('data');$router.back();">Save</button>
+                    <button v-if="$act == 'create'" @click="create();">Save</button>
                     <button @click="$router.back();">Back</button>
                 </footer>
             </main>
@@ -101,7 +102,8 @@
                     load:function(vm){
                         vm = vm || this;
                         
-                        axios.get("/"+this.$route.params.main).then(function(response){
+                        axios.get("/"+this.$route.params.main)
+                        .then(function(response){
                             vm.data = response.data || [];
                         });
                     
@@ -121,11 +123,23 @@
                     load:function(vm){
                         vm = vm || this;
                         
-                        axios.get("/"+this.$route.params.main+"/"+this.$route.params.id).then(function(response){
-                            vm.data = response.data || {};
-                        });
+                        if(this.$act === "create"){
+                            console.log("cra")
+                        } else {
+                            axios.get("/"+this.$route.params.main+"/"+this.$route.params.id)
+                            .then(function(response){
+                                vm.data = response.data || {};
+                            });
+                        }
                         
                         return vm;
+                    },
+                    create:function(){
+                        axios.post("/"+this.$route.params.main,{name:this.data.name})
+                        .then(function(response){
+                            console.log("response",response);
+                        });
+                        
                     }
                 },
                 data:function(){
@@ -147,12 +161,22 @@
                         component:TableListPage,
                     },
                     {
+                        path: '/:main/create',
+                        component:TableItemPage,
+                        meta:{
+                            act:"create"
+                        }
+                    },
+                    {
                         path: '/:main/:id',
                         component:TableItemPage,
                         children:[
                             {
-                                path:"$:action",
-                                component:TableItemPage
+                                path:"modify",
+                                component:TableItemPage,
+                                meta:{
+                                    act:"modify"
+                                }
                             }
                         ]
                     }

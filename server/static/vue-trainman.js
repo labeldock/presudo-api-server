@@ -7,18 +7,14 @@
 }(this, function(){
     var VueTrainman = function(){};
     
-    VueTrainman.snapshot = function(){
-        
-    };
-    
     VueTrainman.install = function(Vue, options){
         
         var VueMixin = {};
         
-        //router action helper
-        Object.defineProperty(Vue.prototype, '$action', {
+        //router act helper
+        Object.defineProperty(Vue.prototype, '$act', {
             get: function(){ 
-                return this._self.$route && this._self.$route.params.action;
+                return this._self.$route && (this._self.$route.meta.act || this._self.$route.params.act);
             }
         });
         
@@ -48,14 +44,9 @@
         };
         
         // $track
-        
         VueMixin.created = function(){
             this.$track = {};
         };
-        
-        function cloneShallow(obj){
-            return Object.assign({},obj);
-        }
         
         function cloneDeep(obj){
             try {
@@ -120,6 +111,7 @@
                 el.addEventListener("click",function(e){
                     e.preventDefault();
                     e.stopPropagation();
+                    
                     var linkTo = el.getAttribute("to");
                                 
                     if(linkTo){
