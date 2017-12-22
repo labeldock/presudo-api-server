@@ -1,7 +1,6 @@
-# THIS IS NOT WORKING
-
 # presudo-api-server
-Simple CRUD server
+It is used for small test purposes. It is not stable to use as a product.
+This is CRUD can be activated simply.
 
 ## todo
   - [x] express server
@@ -9,10 +8,12 @@ Simple CRUD server
   - [x] static page
   - [x] server bootstrap (with promise pattern)
   - [x] json db
-  - [ ] CRUD JOB Manager
-  - [ ] manager page
+  - [x] CRUD JOB Manager
+  - [x] manager page
+  - [x] socket based monitoring
+  - [ ] data type
+  - [ ] nested & find
   - [ ] authenticate
-  - [ ] socket
 
 ## require
 node 6.x
