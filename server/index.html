@@ -19,7 +19,7 @@
             </ul>
             <router-view 
                 :key="$route.params.main + $route.params.id" 
-                :maindata="menudata" 
+                :menudata="menudata" 
                 @updated="load();">
             </router-view>
         </div>
@@ -29,40 +29,19 @@
                 <h2>HOME</h2>
                 <p>Welcome to presudo api server manage tool</p>
                 
-                <button @click="formOpend = $train.toggle([true,false],formOpend) && resetForm()">
-                    <span v-if="!formOpend"> Insert category data </span>
-                    <span v-else> Close </span>
-                </button>
-                
-                <div v-if="formOpend">
-                    <hr>
-                    <h2>Create category item</h2>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th>Category</th>
-                                <td>
-                                    <input type="text" v-model="form.category">
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>name</th>
-                                <td>
-                                    <input type="text" v-model="form.name">
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>value</th>
-                                <td>
-                                    <input type="text" v-model="form.value">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <footer>
-                        <button @click="create">Save</button>
-                    </footer>
-                </div>
+                <section>
+                    <h3>Create table</h3>
+                    <input type="text" v-model="form.createTableName">
+                    <button @click="createTable">Create</button>
+                </section>
+                <section>
+                    <h3>Drop table</h3>
+                    <select v-model="form.dropTableName">
+                        <option disabled value="">Please select one</option>
+                        <option v-for="item in tables">{{item.name}}</option>
+                    </select>
+                    <button @click="dropTable">Drop</button>
+                </section>
             </main>
         </template>
         
@@ -160,18 +139,42 @@
            
             var HomePage = Vue.extend({
                 template:"#home-page",
+                props:["menudata"],
+                computed:{
+                    tables:function(){
+                        return this.menudata ? Object.keys(this.menudata).reduce(function(result,key){
+                            result.push({
+                                name:key,
+                                length:this.menudata[key].length
+                            });
+                            return result;
+                        }.bind(this),[]) : [];
+                    }
+                },
                 methods:{
-                    create:function(){
-                        if(!this.form.category || !this.form.name){
-                            return alert("The category and name field is required");
+                    createTable:function(){
+                        if(!this.form.createTableName){
+                            alert("Please enter a table name.");
                         }
                         var vm = this;
-                        
-                        axios.post("/"+this.form.category,Object.assign({},this.form,{id:undefined})).then(function(){
+                        axios.post("/presudo-api-server/"+this.form.createTableName+"/create").then(function(){
                             vm.$emit("updated");
-                            vm.$router.push("/"+vm.form.category);
-                            vm.resetForm();
                         });
+                    },
+                    dropTable:function(){
+                        if(typeof this.form.dropTableName !== "string"){
+                            return alert("Please select the drop table");
+                        }
+                        if(confirm("Is it okay to really delete the " + this.form.dropTableName + " table?")){
+                            if(this.menudata[this.form.dropTableName].length && !confirm("The three data will be deleted together. Do you want to continue?")){
+                                return;
+                            }
+                            
+                            var vm = this;
+                            axios.post("/presudo-api-server/"+this.form.dropTableName+"/drop").then(function(){
+                                vm.$emit("updated");
+                            });
+                        }
                     },
                     resetForm:function(){
                         this.form = {};
@@ -180,7 +183,6 @@
                 },
                 data:function(){
                     return {
-                        formOpend:false,
                         form:{}
                     }
                 }
@@ -188,10 +190,10 @@
            
             var TableListPage = Vue.extend({
                 template: '#table-list-page',
-                props:["maindata"],
+                props:["menudata"],
                 computed:{
                     data:function(){
-                        return this.maindata[this.$route.params.main] || [];
+                        return this.menudata[this.$route.params.main] || [];
                     }
                 },
                 methods:{
@@ -283,7 +285,6 @@
                     });
                 },
                 beforeRouteUpdate(to,from,next){
-                    console.log("beforeRouteLeave");
                     if(this.rawMode === true){
                         if(confirm("Are you sure you want to stop editing raw?")){
                             this.rawMode = false;

@@ -48,22 +48,22 @@ module.exports = $q.sequance([
         });
         
         app.get("/presudo-api-server/:model/keys",function(req,res){
-            var result = Object.keys(Object.assign.apply(Object,db.table(req.params.models).all()));
+            var result = Object.keys(Object.assign.apply(Object,db.table(req.params.model).all()));
             res.status(200).send(result);
         });
         
         app.post("/presudo-api-server/:model/create",function(req,res){
             db.writeDataSource(function(){
-                db.createTable(req.params.model);
-            }).then(function(){
+                return db.createTable(req.params.model);
+            }).then(function(result){
                 res.status(200).send(result);
             });
         });
         
         app.post("/presudo-api-server/:model/drop",function(req,res){
             db.writeDataSource(function(){
-                db.dropTable(req.params.model);
-            }).then(function(){
+                return db.dropTable(req.params.model);
+            }).then(function(result){
                 res.status(200).send(result);
             });
         });

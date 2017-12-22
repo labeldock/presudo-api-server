@@ -34,11 +34,14 @@ var ODBCObjectConnection = (function(){
             if(!this.dataSource[modelKey]){
                 this.dataSource[modelKey] = [];
             }
+            return this.dataSource[modelKey];
         },
         dropTable:function(modelKey){
+            var droped = this.dataSource[modelKey] || [];
             if(this.dataSource.hasOwnProperty(modelKey)){
                 delete this.dataSource[modelKey];
             }
+            return droped;
         }
     };
     
