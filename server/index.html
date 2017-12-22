@@ -85,7 +85,7 @@
                             <td>{{item.id}}</td>
                             <th>name</th>
                             <td>{{item.name}}</td>
-                            <th>name</th>
+                            <th>value</th>
                             <td>{{item.value}}</td>
                             <td>
                                 <button v-router-link :to="$route.params.main + '/' + item.id" >Show</button>
@@ -223,7 +223,7 @@
                     create:function(){
                         var vm = this;
                         
-                        axios.post("/"+this.$route.params.main,{name:this.data.name}).then(function(response){
+                        axios.post("/"+this.$route.params.main,{name:this.data.name,value:this.data.value}).then(function(response){
                             vm.$router.replace("/"+vm.$route.params.main);
                             vm.$emit("updated");
                         });
@@ -231,7 +231,7 @@
                     modify:function(){
                         var vm = this;
                         
-                        axios.patch("/"+this.$route.params.main+"/"+this.$route.params.id,{name:this.data.name}).then(function(response){
+                        axios.patch("/"+this.$route.params.main+"/"+this.$route.params.id,{name:this.data.name,value:this.data.value}).then(function(response){
                             vm.$freez("data");
                             vm.$router.replace("/"+vm.$route.params.main);
                             vm.$emit("updated");
