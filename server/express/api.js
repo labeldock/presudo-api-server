@@ -6,5 +6,5 @@ bootstrap
     
 })
 .catch(function(error){
-    console.log("why?",error);
+    console.log("Server bootstrap",error);
 });

@@ -94,7 +94,7 @@
                                 </span>
                             </td>
                         </tr>
-                        <tr v-for="datakey in Object.keys(data)" v-if="datakey != 'id'">
+                        <tr v-for="datakey in allKeys" v-if="datakey != 'id'">
                             <th>
                                 {{datakey}}
                             </th>
@@ -154,7 +154,7 @@
                 methods:{
                     createTable:function(){
                         if(!this.form.createTableName){
-                            alert("Please enter a table name.");
+                            return alert("Please enter a table name.");
                         }
                         var vm = this;
                         axios.post("/presudo-api-server/"+this.form.createTableName+"/create").then(function(){
@@ -214,10 +214,15 @@
             
             var TableItemPage = Vue.extend({
                 template:"#table-item-page",
+                props:["menudata"],
                 computed:{
                     pageTitle:function(){
                         return filter.capitalize(this.$route.meta.act) + " " + (this.$route.meta.act ? this.$route.params.main : filter.capitalize(this.$route.params.main)) + " table item " + (this.data.id ? this.data.id : '');
-                    }  
+                    },
+                    allKeys:function(){
+                        var allKeys = Object.keys(Object.assign.apply(Object,[{}].concat(this.menudata[this.$route.params.main]).concat(this.data)));
+                        return allKeys;                        
+                    }
                 },
                 methods:{
                     load:function(vm){
@@ -261,7 +266,7 @@
                                     throw new Error("Raw must be a JSON object.");
                                 }
                                 
-                                if(!parseObject.id && (typeof parseObject.id !== "number") || !(parseObject.id > 0)){
+                                if((this.$route.meta.act != "create") && (!parseObject.id && (typeof parseObject.id !== "number") || !(parseObject.id > 0))){
                                     throw new Error("The format of id is not valid. The id must exist, must be of type Number, and must be greater than 0.");
                                 }
                                 
