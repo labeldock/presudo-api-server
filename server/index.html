@@ -83,10 +83,13 @@
                         <tr v-for="item in data">
                             <th>id</th>
                             <td>{{item.id}}</td>
-                            <th>name</th>
-                            <td>{{item.name}}</td>
-                            <th>value</th>
-                            <td>{{item.value}}</td>
+                            <td style="font-size:12px;">
+                                <span v-for="key in Object.keys(item)" v-if="key != 'id'">
+                                    <b>{{key}}</b>
+                                    <span>{{item[key]}}</span>
+                                    &nbsp;&nbsp;
+                                </span>
+                            </td>
                             <td>
                                 <button v-router-link :to="$route.params.main + '/' + item.id" >Show</button>
                                 <button @click="remove(item)">Del</button>
@@ -102,7 +105,7 @@
                 <header>
                     <h2>{{pageTitle}}</h2>
                 </header>
-                <table>
+                <table v-if="!(String($route.meta.act).match(/modify|create/) && rawMode)">
                     <tbody>
                         <tr v-if="!String($route.meta.act).match(/modify|create/)">
                             <th>id</th>
@@ -112,33 +115,32 @@
                                 </span>
                             </td>
                         </tr>
-                        <tr>
-                            <th>name</th>
+                        <tr v-for="datakey in Object.keys(data)" v-if="datakey != 'id'">
+                            <th>
+                                {{datakey}}
+                            </th>
                             <td>
-                                <input v-if="String($route.meta.act).match(/modify|create/)" v-model="data.name">
+                                <input v-if="String($route.meta.act).match(/modify|create/)" v-model="data[datakey]">
                                 <span v-else>
-                                    {{data.name}}
+                                    {{data[datakey]}}
                                 </span>
-                                
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>value</th>
-                            <td>
-                                <input v-if="String($route.meta.act).match(/modify|create/)" v-model="data.value">
-                                <span v-else>
-                                    {{data.value}}
-                                </span>
-                                
                             </td>
                         </tr>
                     </tbody>
                 </table>
+                <div v-else>
+                    <textarea v-model="rawString" style="width:60%;height:400px;"></textarea>
+                </div>
                 <footer>
-                    <button v-if="!$route.meta.act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
-                    <button v-if="$route.meta.act == 'modify'" @click="modify()">Save</button>
-                    <button v-if="$route.meta.act == 'create'" @click="create();">Save</button>
-                    <button @click="$router.back();">Back</button>
+                    <button v-if="!rawMode && !$route.meta.act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
+                    <button v-if="!rawMode && $route.meta.act == 'modify'" @click="modify()">Save</button>
+                    <button v-if="!rawMode && $route.meta.act == 'create'" @click="create();">Save</button>
+                    <button v-if="$route.meta.act" @click="toggleRawMode">
+                        <span v-if="!rawMode">raw</span>
+                        <span v-else>confirm</span>
+                    </button>
+                    <button v-if="!rawMode" @click="$router.back();">Back</button>
+                    <button v-if="rawMode" @click="rawMode = false">Back</button>
                 </footer>
             </main>
         </template>
@@ -164,7 +166,8 @@
                             return alert("The category and name field is required");
                         }
                         var vm = this;
-                        axios.post("/"+this.form.category,{name:this.form.name,value:this.form.value}).then(function(){
+                        
+                        axios.post("/"+this.form.category,Object.assign({},this.form,{id:undefined})).then(function(){
                             vm.$emit("updated");
                             vm.$router.push("/"+vm.form.category);
                             vm.resetForm();
@@ -231,7 +234,7 @@
                     create:function(){
                         var vm = this;
                         
-                        axios.post("/"+this.$route.params.main,{name:this.data.name,value:this.data.value}).then(function(response){
+                        axios.post("/"+this.$route.params.main,Object.assign({},this.data,{id:undefined})).then(function(response){
                             vm.$router.replace("/"+vm.$route.params.main);
                             vm.$emit("updated");
                         });
@@ -239,17 +242,58 @@
                     modify:function(){
                         var vm = this;
                         
-                        axios.patch("/"+this.$route.params.main+"/"+this.$route.params.id,{name:this.data.name,value:this.data.value}).then(function(response){
+                        axios.patch("/"+this.$route.params.main+"/"+this.$route.params.id,Object.assign({},this.data,{id:undefined})).then(function(response){
                             vm.$freez("data");
                             vm.$router.replace("/"+vm.$route.params.main);
                             vm.$emit("updated");
                         });
+                    },
+                    toggleRawMode:function(){
+                        this.rawMode = this.$train.toggle([true,false],this.rawMode);
+                        if(this.rawMode){
+                            this.rawString = JSON.stringify(this.data,2,2);
+                        } else {
+                            try {
+                                var parseObject = JSON.parse(this.rawString)
+                                if(!(typeof parseObject === "object") && (parseObject instanceof Array)){
+                                    throw new Error("Raw must be a JSON object.");
+                                }
+                                
+                                if(!parseObject.id && (typeof parseObject.id !== "number") || !(parseObject.id > 0)){
+                                    throw new Error("The format of id is not valid. The id must exist, must be of type Number, and must be greater than 0.");
+                                }
+                                
+                                Vue.set(this,"data",parseObject);
+                                this.rawMode = false;
+                            } catch(e) {
+                                if(confirm("The format of raw is not correct. " + e.message + " Continue editing?")){
+                                    this.rawMode = true;
+                                } else {
+                                    this.rawMode = false;
+                                }
+                            }
+                        }
                     }
                 },
                 data:function(){
                     return this.load({
-                        data:{}
+                        data:{},
+                        rawMode:false,
+                        rawString:""
                     });
+                },
+                beforeRouteUpdate(to,from,next){
+                    console.log("beforeRouteLeave");
+                    if(this.rawMode === true){
+                        if(confirm("Are you sure you want to stop editing raw?")){
+                            this.rawMode = false;
+                        } else {
+                            this.rawMode = true;
+                        }
+                        next(false);
+                    } else {
+                        next();
+                    }
                 }
             });
             
