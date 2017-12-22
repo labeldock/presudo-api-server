@@ -42,9 +42,30 @@ module.exports = $q.sequance([
 
         app.use("/",express.static(path.resolve(__dirname,'../static')));
 
-        app.get("/presudo-api-server",function(req,res){
+        app.get("/presudo-api-server/all",function(req,res){
             var result = db.all();
             res.status(200).send(result);
+        });
+        
+        app.get("/presudo-api-server/:model/keys",function(req,res){
+            var result = Object.keys(Object.assign.apply(Object,db.table(req.params.models).all()));
+            res.status(200).send(result);
+        });
+        
+        app.post("/presudo-api-server/:model/create",function(req,res){
+            db.writeDataSource(function(){
+                db.createTable(req.params.model);
+            }).then(function(){
+                res.status(200).send(result);
+            });
+        });
+        
+        app.post("/presudo-api-server/:model/drop",function(req,res){
+            db.writeDataSource(function(){
+                db.dropTable(req.params.model);
+            }).then(function(){
+                res.status(200).send(result);
+            });
         });
         
         app.get("/:models/",function(req,res){

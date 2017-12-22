@@ -29,6 +29,16 @@ var ODBCObjectConnection = (function(){
         },
         table:function(tableName){
             return new ODBCObjectTable(this, tableName);
+        },
+        createTable:function(modelKey){
+            if(!this.dataSource[modelKey]){
+                this.dataSource[modelKey] = [];
+            }
+        },
+        dropTable:function(modelKey){
+            if(this.dataSource.hasOwnProperty(modelKey)){
+                delete this.dataSource[modelKey];
+            }
         }
     };
     

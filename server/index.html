@@ -337,7 +337,7 @@
                     load:function(vm){
                         vm = vm || this;
                         
-                        axios.get("/presudo-api-server").then(function(response){
+                        axios.get("/presudo-api-server/all").then(function(response){
                             vm.menudata = response.data;
                         });
                         
