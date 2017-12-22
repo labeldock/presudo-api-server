@@ -104,7 +104,7 @@
                 </header>
                 <table>
                     <tbody>
-                        <tr v-if="!String($act).match(/modify|create/)">
+                        <tr v-if="!String($route.meta.act).match(/modify|create/)">
                             <th>id</th>
                             <td>
                                 <span>
@@ -115,7 +115,7 @@
                         <tr>
                             <th>name</th>
                             <td>
-                                <input v-if="String($act).match(/modify|create/)" v-model="data.name">
+                                <input v-if="String($route.meta.act).match(/modify|create/)" v-model="data.name">
                                 <span v-else>
                                     {{data.name}}
                                 </span>
@@ -125,7 +125,7 @@
                         <tr>
                             <th>value</th>
                             <td>
-                                <input v-if="String($act).match(/modify|create/)" v-model="data.name">
+                                <input v-if="String($route.meta.act).match(/modify|create/)" v-model="data.value">
                                 <span v-else>
                                     {{data.value}}
                                 </span>
@@ -135,9 +135,9 @@
                     </tbody>
                 </table>
                 <footer>
-                    <button v-if="!$act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
-                    <button v-if="$act == 'modify'" @click="modify()">Save</button>
-                    <button v-if="$act == 'create'" @click="create();">Save</button>
+                    <button v-if="!$route.meta.act" @click="$stash('data',true);$router.push($route.fullPath + '/modify')">Modify</button>
+                    <button v-if="$route.meta.act == 'modify'" @click="modify()">Save</button>
+                    <button v-if="$route.meta.act == 'create'" @click="create();">Save</button>
                     <button @click="$router.back();">Back</button>
                 </footer>
             </main>
@@ -203,14 +203,14 @@
                 template:"#table-item-page",
                 computed:{
                     pageTitle:function(){
-                        return filter.capitalize(this.$act) + " " + (this.$act ? this.$route.params.main : filter.capitalize(this.$route.params.main)) + " table item " + (this.data.id ? this.data.id : '');
+                        return filter.capitalize(this.$route.meta.act) + " " + (this.$route.meta.act ? this.$route.params.main : filter.capitalize(this.$route.params.main)) + " table item " + (this.data.id ? this.data.id : '');
                     }  
                 },
                 methods:{
                     load:function(vm){
                         vm = vm || this;
                         
-                        if(this.$act === "create"){
+                        if(this.$route.meta.act === "create"){
                             
                         } else {
                             axios.get("/"+this.$route.params.main+"/"+this.$route.params.id).then(function(response){

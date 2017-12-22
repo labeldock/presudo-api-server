@@ -11,13 +11,6 @@
         
         var VueMixin = {};
         
-        //router act helper
-        Object.defineProperty(Vue.prototype, '$act', {
-            get: function(){ 
-                return this._self.$route && (this._self.$route.meta.act || this._self.$route.params.act);
-            }
-        });
-        
         Vue.prototype.$train = {
             toggle:function(ta,cv,set){
                 var index = -1;
