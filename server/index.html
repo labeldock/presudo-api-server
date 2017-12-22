@@ -160,7 +160,15 @@
                 template:"#home-page",
                 methods:{
                     create:function(){
-                        
+                        if(!this.form.category || !this.form.name){
+                            return alert("The category and name field is required");
+                        }
+                        var vm = this;
+                        axios.post("/"+this.form.category,{name:this.form.name,value:this.form.value}).then(function(){
+                            vm.$emit("updated");
+                            vm.$router.push("/"+vm.form.category);
+                            vm.resetForm();
+                        });
                     },
                     resetForm:function(){
                         this.form = {};

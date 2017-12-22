@@ -35,11 +35,12 @@ var ODBCObjectConnection = (function(){
     var ODBCObjectTable = function(driver, tableName){
         this.tableName    = tableName;
         this.handleSource = function(handle){
+            if(!driver.dataSource[this.tableName]) driver.dataSource[this.tableName] = [];
             return handle(driver.dataSource[this.tableName]);
         };
         this.dataSoruce = function(where){
-            var dataSource = driver.dataSource[this.tableName] || [];
-            return _.cloneDeep(where? _.filter(dataSource,where) : dataSource);
+            if(!driver.dataSource[this.tableName]) driver.dataSource[this.tableName] = [];
+            return _.cloneDeep(where? _.filter(driver.dataSource[this.tableName],where) : driver.dataSource[this.tableName]);
         };
     };
     
