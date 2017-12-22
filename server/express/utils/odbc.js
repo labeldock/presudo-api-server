@@ -84,9 +84,17 @@ var ODBCObjectConnection = (function(){
             }) : null;
         },
         deleteBy:function(yieldFn){
-            this.handleSource(function(dataSource){
-                var saveData = _.filter(dataSource, function(d,i){ return !yieldFn(d,i); });
+            return this.handleSource(function(dataSource){
+                var deleted = [];
+                var saveData = _.filter(dataSource, function(d,i){ 
+                    if(!yieldFn(d,i)){
+                        return true;
+                    } else {
+                        deleted.push(d);
+                    }
+                });
                 Array.prototype.splice.apply(dataSource,[0,dataSource.length].concat(saveData));
+                return deleted;
             });
         },
         updateBy:function(filterFn,yieldFn){
@@ -100,7 +108,8 @@ var ODBCObjectConnection = (function(){
     
     return function(object,writeFn){
         return new ODBCObjectConnector(object,writeFn);
-    }
+    };
+    
 }());
 
 var ODBC = (function(){

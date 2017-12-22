@@ -6,6 +6,7 @@
         <script src="/axios.js" type="text/javascript" charset="utf-8"></script>
         <script src="/vue-router.js" type="text/javascript" charset="utf-8"></script>
         <script src="/vue-trainman.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/socket.io/socket.io.js"></script>
     </head>
     <body>
         <div id="app" v-cloak>
@@ -18,7 +19,7 @@
                 </li>
             </ul>
             <router-view 
-                :key="$route.params.main + $route.params.id" 
+                :key="$route.params.main + ($route.params.id || '')" 
                 :menudata="menudata" 
                 @updated="load();">
             </router-view>
@@ -41,6 +42,10 @@
                         <option v-for="item in tables">{{item.name}}</option>
                     </select>
                     <button @click="dropTable">Drop</button>
+                </section>
+                <section>
+                    <h3>Event monitor</h3>
+                    <ul id="event-monitor"></ul>
                 </section>
             </main>
         </template>
@@ -158,6 +163,7 @@
                         }
                         var vm = this;
                         axios.post("/presudo-api-server/"+this.form.createTableName+"/create").then(function(){
+                            vm.form.createTableName = '';
                             vm.$emit("updated");
                         });
                     },
@@ -172,6 +178,7 @@
                             
                             var vm = this;
                             axios.post("/presudo-api-server/"+this.form.dropTableName+"/drop").then(function(){
+                                vm.form.dropTableName = '';
                                 vm.$emit("updated");
                             });
                         }
@@ -185,6 +192,33 @@
                     return {
                         form:{}
                     }
+                },
+                mounted:function(){
+                    console.log("homepage mounted");
+                    
+                    this.$io = io("/presudo:db");
+                    
+                    var monitorView = this.$el.querySelector("#event-monitor");
+                    
+                    this.$io.on("event",function(response){
+                        
+                        var li = document.createElement("li");
+                        var notification = ["[",response.table," : ",response.type,"] => "];
+                        
+                        if(response.oldValue){
+                            notification.push(JSON.stringify(response.oldValue));
+                            notification.push(" ==>> ");
+                            notification.push(JSON.stringify(response.value));
+                        } else {
+                            notification.push(JSON.stringify(response.value));
+                        }
+                        
+                        li.innerText = notification.join('');
+                        monitorView.append(li);
+                    });
+                },
+                destroyed:function(){
+                    this.$io.disconnect();
                 }
             });
            
@@ -271,6 +305,7 @@
                                 }
                                 
                                 Vue.set(this,"data",parseObject);
+                                
                                 this.rawMode = false;
                             } catch(e) {
                                 if(confirm("The format of raw is not correct. " + e.message + " Continue editing?")){
